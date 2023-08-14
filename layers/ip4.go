@@ -302,7 +302,7 @@ func decodeIPv4(data []byte, p gopacket.PacketBuilder) error {
 	return p.NextDecoder(ip.NextLayerType())
 }
 
-// CheckAddresses verifys both netip.Addrs are V4.
+// CheckAddresses ensures IPv4.SrcIP and IPv4.DstIP are actually IPv4 addresses (i.e. 4 byte addresses)
 func (ip *IPv4) CheckAddresses() error {
 
 	if !ip.SrcIP.Is4() {

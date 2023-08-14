@@ -701,7 +701,7 @@ func (i *IPv6Destination) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.
 	return nil
 }
 
-// AddressTo16 ensures IPv6.SrcIP and IPv6.DstIP are actually IPv6 addresses (i.e. 16 byte addresses)
+// CheckAddresses ensures IPv6.SrcIP and IPv6.DstIP are actually IPv6 addresses (i.e. 16 byte addresses)
 func (ipv6 *IPv6) CheckAddresses() error {
 
 	if !ipv6.SrcIP.Is6() {
