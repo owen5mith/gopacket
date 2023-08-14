@@ -11,7 +11,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"net"
+	"net/netip"
 	"strings"
 
 	"github.com/gopacket/gopacket"
@@ -52,8 +52,8 @@ type IPv4 struct {
 	TTL        uint8
 	Protocol   IPProtocol
 	Checksum   uint16
-	SrcIP      net.IP
-	DstIP      net.IP
+	SrcIP      netip.Addr
+	DstIP      netip.Addr
 	Options    []IPv4Option
 	Padding    []byte
 }
@@ -61,7 +61,7 @@ type IPv4 struct {
 // LayerType returns LayerTypeIPv4
 func (i *IPv4) LayerType() gopacket.LayerType { return LayerTypeIPv4 }
 func (i *IPv4) NetworkFlow() gopacket.Flow {
-	return gopacket.NewFlow(EndpointIPv4, i.SrcIP, i.DstIP)
+	return gopacket.NewFlow(EndpointIPv4, i.SrcIP.AsSlice(), i.DstIP.AsSlice())
 }
 
 type IPv4Option struct {
@@ -117,11 +117,11 @@ func (ip *IPv4) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeO
 	binary.BigEndian.PutUint16(bytes[6:], ip.flagsfrags())
 	bytes[8] = ip.TTL
 	bytes[9] = byte(ip.Protocol)
-	if err := ip.AddressTo4(); err != nil {
+	if err := ip.CheckAddresses(); err != nil {
 		return err
 	}
-	copy(bytes[12:16], ip.SrcIP)
-	copy(bytes[16:20], ip.DstIP)
+	copy(bytes[12:16], ip.SrcIP.AsSlice())
+	copy(bytes[16:20], ip.DstIP.AsSlice())
 
 	curLocation := 20
 	// Now, we will encode the options
@@ -273,8 +273,8 @@ func (ip *IPv4) DecodeFromBytes(data []byte, df gopacket.DecodeFeedback) error {
 	ip.TTL = data[8]
 	ip.Protocol = IPProtocol(data[9])
 	ip.Checksum = binary.BigEndian.Uint16(data[10:12])
-	ip.SrcIP = data[12:16]
-	ip.DstIP = data[16:20]
+	ip.SrcIP = netip.AddrFrom4([4]byte(data[12:16]))
+	ip.DstIP = netip.AddrFrom4([4]byte(data[16:20]))
 	ip.Padding = nil
 
 	return nil
@@ -302,30 +302,16 @@ func decodeIPv4(data []byte, p gopacket.PacketBuilder) error {
 	return p.NextDecoder(ip.NextLayerType())
 }
 
-func checkIPv4Address(addr net.IP) (net.IP, error) {
-	if c := addr.To4(); c != nil {
-		return c, nil
-	}
-	if len(addr) == net.IPv6len {
-		return nil, errors.New("address is IPv6")
-	}
-	return nil, fmt.Errorf("wrong length of %d bytes instead of %d", len(addr), net.IPv4len)
-}
+// CheckAddresses verifys both netip.Addrs are V4.
+func (ip *IPv4) CheckAddresses() error {
 
-func (ip *IPv4) AddressTo4() error {
-	var src, dst net.IP
+	if !ip.SrcIP.Is4() {
+		return fmt.Errorf("Invalid source IPv4 address: %s", ip.SrcIP)
+	}
 
-	if addr, err := checkIPv4Address(ip.SrcIP); err != nil {
-		return fmt.Errorf("Invalid source IPv4 address (%s)", err)
-	} else {
-		src = addr
+	if !ip.DstIP.Is4() {
+		return fmt.Errorf("Invalid destination IPv4 address: %s", ip.DstIP)
 	}
-	if addr, err := checkIPv4Address(ip.DstIP); err != nil {
-		return fmt.Errorf("Invalid destination IPv4 address (%s)", err)
-	} else {
-		dst = addr
-	}
-	ip.SrcIP = src
-	ip.DstIP = dst
+
 	return nil
 }

@@ -12,6 +12,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net"
+	"net/netip"
 	"reflect"
 	"strings"
 	"testing"
@@ -415,8 +416,8 @@ func TestDecodeSimpleTCPPacket(t *testing.T) {
 			TTL:        64,
 			Protocol:   6,
 			Checksum:   0x555A,
-			SrcIP:      []byte{172, 17, 81, 73},
-			DstIP:      []byte{173, 222, 254, 225},
+			SrcIP:      netip.MustParseAddr("172.17.81.73"),
+			DstIP:      netip.MustParseAddr("173.222.254.225"),
 		}
 		if !reflect.DeepEqual(ip, want) {
 			t.Errorf("IP layer mismatch, \ngot  %#v\nwant %#v\n", ip, want)

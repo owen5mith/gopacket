@@ -7,7 +7,7 @@
 package layers
 
 import (
-	"net"
+	"net/netip"
 	"testing"
 
 	"github.com/gopacket/gopacket"
@@ -23,8 +23,8 @@ func createIPv4ChecksumTestLayer() (ip4 *IPv4) {
 	ip4 = &IPv4{}
 	ip4.Version = 4
 	ip4.TTL = 64
-	ip4.SrcIP = net.ParseIP("192.0.2.1")
-	ip4.DstIP = net.ParseIP("198.51.100.1")
+	ip4.SrcIP = netip.MustParseAddr("192.0.2.1")
+	ip4.DstIP = netip.MustParseAddr("198.51.100.1")
 	return
 }
 
@@ -33,8 +33,8 @@ func createIPv6ChecksumTestLayer() (ip6 *IPv6) {
 	ip6.Version = 6
 	ip6.NextHeader = IPProtocolNoNextHeader
 	ip6.HopLimit = 64
-	ip6.SrcIP = net.ParseIP("2001:db8::1")
-	ip6.DstIP = net.ParseIP("2001:db8::2")
+	ip6.SrcIP = netip.MustParseAddr("2001:db8::1")
+	ip6.DstIP = netip.MustParseAddr("2001:db8::2")
 	return
 }
 
@@ -144,8 +144,8 @@ func TestIPv6JumbogramUDPChecksum(t *testing.T) {
 	ip6.Version = 6
 	ip6.NextHeader = IPProtocolUDP
 	ip6.HopLimit = 64
-	ip6.SrcIP = net.ParseIP("2001:db8::1")
-	ip6.DstIP = net.ParseIP("2001:db8::2")
+	ip6.SrcIP = netip.MustParseAddr("2001:db8::1")
+	ip6.DstIP = netip.MustParseAddr("2001:db8::2")
 	serialize = append(serialize, ip6)
 
 	udp := &UDP{}

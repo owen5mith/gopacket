@@ -24,25 +24,29 @@ type tcpipPseudoHeader interface {
 }
 
 func (ip *IPv4) pseudoheaderChecksum() (csum uint32, err error) {
-	if err := ip.AddressTo4(); err != nil {
+	if err := ip.CheckAddresses(); err != nil {
 		return 0, err
 	}
-	csum += (uint32(ip.SrcIP[0]) + uint32(ip.SrcIP[2])) << 8
-	csum += uint32(ip.SrcIP[1]) + uint32(ip.SrcIP[3])
-	csum += (uint32(ip.DstIP[0]) + uint32(ip.DstIP[2])) << 8
-	csum += uint32(ip.DstIP[1]) + uint32(ip.DstIP[3])
+	srcIPBytes := ip.SrcIP.As4()
+	dstIpBytes := ip.DstIP.As4()
+	csum += (uint32(srcIPBytes[0]) + uint32(srcIPBytes[2])) << 8
+	csum += uint32(srcIPBytes[1]) + uint32(srcIPBytes[3])
+	csum += (uint32(dstIpBytes[0]) + uint32(dstIpBytes[2])) << 8
+	csum += uint32(dstIpBytes[1]) + uint32(dstIpBytes[3])
 	return csum, nil
 }
 
 func (ip *IPv6) pseudoheaderChecksum() (csum uint32, err error) {
-	if err := ip.AddressTo16(); err != nil {
+	if err := ip.CheckAddresses(); err != nil {
 		return 0, err
 	}
+	srcIPBytes := ip.SrcIP.As16()
+	dstIpBytes := ip.DstIP.As16()
 	for i := 0; i < 16; i += 2 {
-		csum += uint32(ip.SrcIP[i]) << 8
-		csum += uint32(ip.SrcIP[i+1])
-		csum += uint32(ip.DstIP[i]) << 8
-		csum += uint32(ip.DstIP[i+1])
+		csum += uint32(srcIPBytes[i]) << 8
+		csum += uint32(srcIPBytes[i+1])
+		csum += uint32(dstIpBytes[i]) << 8
+		csum += uint32(dstIpBytes[i+1])
 	}
 	return csum, nil
 }

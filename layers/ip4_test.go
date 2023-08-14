@@ -12,7 +12,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
-	"net"
+	"net/netip"
 	"reflect"
 	"testing"
 
@@ -68,8 +68,8 @@ func TestIPOptResetDuringDecoding(t *testing.T) {
 	}
 
 	ipWithoutOptions := &IPv4{
-		SrcIP:    net.IPv4(192, 168, 1, 1),
-		DstIP:    net.IPv4(192, 168, 1, 1),
+		SrcIP:    netip.MustParseAddr("192.168.1.1"),
+		DstIP:    netip.MustParseAddr("192.168.1.1"),
 		Protocol: IPProtocolTCP,
 	}
 

@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/netip"
 
 	"github.com/gopacket/gopacket"
 )
@@ -35,8 +36,8 @@ type IPv6 struct {
 	Length       uint16
 	NextHeader   IPProtocol
 	HopLimit     uint8
-	SrcIP        net.IP
-	DstIP        net.IP
+	SrcIP        netip.Addr
+	DstIP        netip.Addr
 	HopByHop     *IPv6HopByHop
 	// hbh will be pointed to by HopByHop if that layer exists.
 	hbh IPv6HopByHop
@@ -47,7 +48,7 @@ func (ipv6 *IPv6) LayerType() gopacket.LayerType { return LayerTypeIPv6 }
 
 // NetworkFlow returns this new Flow (EndpointIPv6, SrcIP, DstIP)
 func (ipv6 *IPv6) NetworkFlow() gopacket.Flow {
-	return gopacket.NewFlow(EndpointIPv6, ipv6.SrcIP, ipv6.DstIP)
+	return gopacket.NewFlow(EndpointIPv6, ipv6.SrcIP.AsSlice(), ipv6.DstIP.AsSlice())
 }
 
 // Search for Jumbo Payload TLV in IPv6HopByHop and return (length, true) if found
@@ -209,11 +210,11 @@ func (ipv6 *IPv6) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.Serializ
 	binary.BigEndian.PutUint16(bytes[4:], ipv6.Length)
 	bytes[6] = byte(ipv6.NextHeader)
 	bytes[7] = byte(ipv6.HopLimit)
-	if err := ipv6.AddressTo16(); err != nil {
+	if err := ipv6.CheckAddresses(); err != nil {
 		return err
 	}
-	copy(bytes[8:], ipv6.SrcIP)
-	copy(bytes[24:], ipv6.DstIP)
+	copy(bytes[8:], ipv6.SrcIP.AsSlice())
+	copy(bytes[24:], ipv6.DstIP.AsSlice())
 	return nil
 }
 
@@ -229,8 +230,8 @@ func (ipv6 *IPv6) DecodeFromBytes(data []byte, df gopacket.DecodeFeedback) error
 	ipv6.Length = binary.BigEndian.Uint16(data[4:6])
 	ipv6.NextHeader = IPProtocol(data[6])
 	ipv6.HopLimit = data[7]
-	ipv6.SrcIP = data[8:24]
-	ipv6.DstIP = data[24:40]
+	ipv6.SrcIP = netip.AddrFrom16([16]byte(data[8:24]))
+	ipv6.DstIP = netip.AddrFrom16([16]byte(data[24:40]))
 	ipv6.HopByHop = nil
 	ipv6.BaseLayer = BaseLayer{data[:40], data[40:]}
 
@@ -700,23 +701,16 @@ func (i *IPv6Destination) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.
 	return nil
 }
 
-func checkIPv6Address(addr net.IP) error {
-	if len(addr) == net.IPv6len {
-		return nil
-	}
-	if len(addr) == net.IPv4len {
-		return errors.New("address is IPv4")
-	}
-	return fmt.Errorf("wrong length of %d bytes instead of %d", len(addr), net.IPv6len)
-}
-
 // AddressTo16 ensures IPv6.SrcIP and IPv6.DstIP are actually IPv6 addresses (i.e. 16 byte addresses)
-func (ipv6 *IPv6) AddressTo16() error {
-	if err := checkIPv6Address(ipv6.SrcIP); err != nil {
-		return fmt.Errorf("Invalid source IPv6 address (%s)", err)
+func (ipv6 *IPv6) CheckAddresses() error {
+
+	if !ipv6.SrcIP.Is6() {
+		return fmt.Errorf("Invalid source IPv6 address: %s", ipv6.SrcIP)
 	}
-	if err := checkIPv6Address(ipv6.DstIP); err != nil {
-		return fmt.Errorf("Invalid destination IPv6 address (%s)", err)
+
+	if !ipv6.DstIP.Is6() {
+		return fmt.Errorf("Invalid destination IPv6 address: %s", ipv6.DstIP)
 	}
+
 	return nil
 }

@@ -8,6 +8,7 @@ package layers
 import (
 	"fmt"
 	"net"
+	"net/netip"
 	"reflect"
 	"testing"
 
@@ -67,8 +68,8 @@ var testIPv4OverGRE = []gopacket.SerializableLayer{
 	},
 	&IPv4{
 		Version:  4,
-		SrcIP:    net.IP{192, 168, 1, 1},
-		DstIP:    net.IP{192, 168, 1, 2},
+		SrcIP:    netip.MustParseAddr("192.168.1.1"),
+		DstIP:    netip.MustParseAddr("192.168.1.2"),
 		Protocol: IPProtocolGRE,
 		Flags:    IPv4DontFragment,
 		TTL:      64,
@@ -80,8 +81,8 @@ var testIPv4OverGRE = []gopacket.SerializableLayer{
 	},
 	&IPv4{
 		Version:  4,
-		SrcIP:    net.IP{172, 16, 1, 1},
-		DstIP:    net.IP{172, 16, 2, 1},
+		SrcIP:    netip.MustParseAddr("172.16.1.1"),
+		DstIP:    netip.MustParseAddr("172.16.2.1"),
 		Protocol: IPProtocolICMPv4,
 		Flags:    IPv4DontFragment,
 		TTL:      64,
@@ -187,8 +188,8 @@ var testEthernetOverGRE = []gopacket.SerializableLayer{
 	},
 	&IPv4{
 		Version:  4,
-		SrcIP:    net.IP{192, 168, 1, 1},
-		DstIP:    net.IP{192, 168, 1, 2},
+		SrcIP:    netip.MustParseAddr("192.168.1.1"),
+		DstIP:    netip.MustParseAddr("192.168.1.2"),
 		Protocol: IPProtocolGRE,
 		Flags:    IPv4DontFragment,
 		TTL:      64,
@@ -205,8 +206,8 @@ var testEthernetOverGRE = []gopacket.SerializableLayer{
 	},
 	&IPv4{
 		Version:  4,
-		SrcIP:    net.IP{172, 16, 1, 1},
-		DstIP:    net.IP{172, 16, 1, 2},
+		SrcIP:    netip.MustParseAddr("172.16.1.1"),
+		DstIP:    netip.MustParseAddr("172.16.1.2"),
 		Protocol: IPProtocolICMPv4,
 		Flags:    IPv4DontFragment,
 		TTL:      64,
@@ -266,8 +267,8 @@ var testGREChecksum = map[uint16][]gopacket.SerializableLayer{
 		},
 		&IPv4{
 			Version:  4,
-			SrcIP:    net.IP{10, 0, 0, 1},
-			DstIP:    net.IP{10, 0, 0, 2},
+			SrcIP:    netip.MustParseAddr("10.0.0.1"),
+			DstIP:    netip.MustParseAddr("10.0.0.2"),
 			Protocol: IPProtocolGRE,
 			TTL:      255,
 			Id:       10,
@@ -279,8 +280,8 @@ var testGREChecksum = map[uint16][]gopacket.SerializableLayer{
 		},
 		&IPv4{
 			Version:  4,
-			SrcIP:    net.IP{1, 1, 1, 1},
-			DstIP:    net.IP{2, 2, 2, 2},
+			SrcIP:    netip.MustParseAddr("1.1.1.1"),
+			DstIP:    netip.MustParseAddr("2.2.2.2"),
 			Protocol: IPProtocolICMPv4,
 			TTL:      255,
 			IHL:      5,
@@ -307,8 +308,8 @@ var testGREChecksum = map[uint16][]gopacket.SerializableLayer{
 		},
 		&IPv4{
 			Version:  4,
-			SrcIP:    net.IP{10, 0, 0, 1},
-			DstIP:    net.IP{10, 0, 0, 2},
+			SrcIP:    netip.MustParseAddr("10.0.0.1"),
+			DstIP:    netip.MustParseAddr("10.0.0.2"),
 			Protocol: IPProtocolGRE,
 			TTL:      255,
 			Id:       10,
@@ -320,8 +321,8 @@ var testGREChecksum = map[uint16][]gopacket.SerializableLayer{
 		},
 		&IPv4{
 			Version:  4,
-			SrcIP:    net.IP{2, 3, 4, 5},
-			DstIP:    net.IP{2, 3, 4, 50},
+			SrcIP:    netip.MustParseAddr("2.3.4.5"),
+			DstIP:    netip.MustParseAddr("2.3.4.50"),
 			Protocol: IPProtocolUDP,
 			TTL:      1,
 			IHL:      5,
