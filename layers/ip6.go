@@ -213,8 +213,10 @@ func (ipv6 *IPv6) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.Serializ
 	if err := ipv6.CheckAddresses(); err != nil {
 		return err
 	}
-	copy(bytes[8:], ipv6.SrcIP.AsSlice())
-	copy(bytes[24:], ipv6.DstIP.AsSlice())
+	srcIP := ipv6.SrcIP.As16()
+	dstIP := ipv6.DstIP.As16()
+	copy(bytes[8:], srcIP[:])
+	copy(bytes[24:], dstIP[:])
 	return nil
 }
 
