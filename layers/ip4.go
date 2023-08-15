@@ -120,8 +120,10 @@ func (ip *IPv4) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeO
 	if err := ip.CheckAddresses(); err != nil {
 		return err
 	}
-	copy(bytes[12:16], ip.SrcIP.AsSlice())
-	copy(bytes[16:20], ip.DstIP.AsSlice())
+	srcIP := ip.SrcIP.As4()
+	dstIP := ip.DstIP.As4()
+	copy(bytes[12:16], srcIP[:])
+	copy(bytes[16:20], dstIP[:])
 
 	curLocation := 20
 	// Now, we will encode the options
