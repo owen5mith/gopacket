@@ -61,7 +61,9 @@ type IPv4 struct {
 // LayerType returns LayerTypeIPv4
 func (i *IPv4) LayerType() gopacket.LayerType { return LayerTypeIPv4 }
 func (i *IPv4) NetworkFlow() gopacket.Flow {
-	return gopacket.NewFlow(EndpointIPv4, i.SrcIP.AsSlice(), i.DstIP.AsSlice())
+	srcIPBytes := i.SrcIP.As4()
+	dstIPBytes := i.DstIP.As4()
+	return gopacket.NewFlow(EndpointIPv4, srcIPBytes[:], dstIPBytes[:])
 }
 
 type IPv4Option struct {
