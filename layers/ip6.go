@@ -48,7 +48,9 @@ func (ipv6 *IPv6) LayerType() gopacket.LayerType { return LayerTypeIPv6 }
 
 // NetworkFlow returns this new Flow (EndpointIPv6, SrcIP, DstIP)
 func (ipv6 *IPv6) NetworkFlow() gopacket.Flow {
-	return gopacket.NewFlow(EndpointIPv6, ipv6.SrcIP.AsSlice(), ipv6.DstIP.AsSlice())
+	srcIPBytes := ipv6.SrcIP.As16()
+	dstIPBytes := ipv6.DstIP.As16()
+	return gopacket.NewFlow(EndpointIPv6, srcIPBytes[:], dstIPBytes[:])
 }
 
 // Search for Jumbo Payload TLV in IPv6HopByHop and return (length, true) if found
