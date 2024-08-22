@@ -8,7 +8,8 @@
 package layers
 
 import (
-	"net"
+	"bytes"
+	"net/netip"
 	"reflect"
 	"testing"
 
@@ -230,7 +231,7 @@ func TestDNSRRA(t *testing.T) {
 		t.Errorf("Invalid query decoding, expecting Type A, got '%d'",
 			dns.Questions[0].Type)
 	}
-	if !dns.Answers[0].IP.Equal([]byte{74, 125, 195, 103}) {
+	if !(dns.Answers[0].IP == netip.AddrFrom4([...]byte{74, 125, 195, 103})) {
 		t.Errorf("Invalid query decoding, invalid IP address,"+
 			" expecting '74.125.195.103', got '%s'",
 			dns.Answers[0].IP.String())
@@ -312,7 +313,7 @@ func TestDNSAAAA(t *testing.T) {
 	if len(dns.Answers) != 1 {
 		t.Error("Invalid number of answers")
 	}
-	if !dns.Answers[0].IP.Equal([]byte{0x2a, 0x00, 0x14, 0x50, 0x40,
+	if !bytes.Equal(dns.Answers[0].IP.AsSlice(), []byte{0x2a, 0x00, 0x14, 0x50, 0x40,
 		0x0c, 0x0c, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x69}) {
 		t.Error("Invalid IP address, found ",
 			dns.Answers[0].IP.String())
@@ -381,8 +382,8 @@ func TestZeroChecksum(t *testing.T) {
 	ip := &IPv4{
 		Version: 4,
 		// Choosen to give a 0 checksum.
-		SrcIP:    net.ParseIP("116.43.192.186"),
-		DstIP:    net.ParseIP("8.47.167.201"),
+		SrcIP:    netip.MustParseAddr("116.43.192.186"),
+		DstIP:    netip.MustParseAddr("8.47.167.201"),
 		Protocol: IPProtocolUDP,
 	}
 	udp := &UDP{

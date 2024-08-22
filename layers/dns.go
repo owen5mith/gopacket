@@ -10,7 +10,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"net"
+	"net/netip"
 	"strings"
 
 	"github.com/gopacket/gopacket"
@@ -701,7 +701,7 @@ type DNSResourceRecord struct {
 	Data       []byte
 
 	// RDATA Decoded Values
-	IP             net.IP
+	IP             netip.Addr
 	NS, CNAME, PTR []byte
 	TXTs           [][]byte
 	SOA            DNSSOA
@@ -781,9 +781,17 @@ func (rr *DNSResourceRecord) encode(data []byte, offset int, opts gopacket.Seria
 
 	switch rr.Type {
 	case DNSTypeA:
-		copy(data[noff+10:], rr.IP.To4())
+		if rr.IP.Is4() {
+			copy(data[noff+10:], rr.IP.AsSlice())
+		} else {
+			return 0, errors.New("IPv4 Address not set when type is DNSTypeA")
+		}
 	case DNSTypeAAAA:
-		copy(data[noff+10:], rr.IP)
+		if rr.IP.Is6() {
+			copy(data[noff+10:], rr.IP.AsSlice())
+		} else {
+			return 0, errors.New("IPv6 Address not set when type is DNSTypeA")
+		}
 	case DNSTypeNS:
 		encodeName(rr.NS, data, noff+10)
 	case DNSTypeCNAME:
@@ -957,10 +965,12 @@ func decodeSVCB(data []byte, offset int, buffer *[]byte) (DNSSVCB, error) {
 
 func (rr *DNSResourceRecord) decodeRData(data []byte, offset int, buffer *[]byte) error {
 	switch rr.Type {
-	case DNSTypeA:
-		rr.IP = rr.Data
-	case DNSTypeAAAA:
-		rr.IP = rr.Data
+	case DNSTypeA, DNSTypeAAAA:
+		ip, ok := netip.AddrFromSlice(rr.Data)
+		if !ok {
+			return errors.New("not able to parse data as IP address")
+		}
+		rr.IP = ip
 	case DNSTypeTXT, DNSTypeHINFO:
 		rr.TXT = rr.Data
 		txts, err := decodeCharacterStrings(rr.Data)

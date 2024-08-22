@@ -8,7 +8,7 @@ package layers
 
 import (
 	"bytes"
-	"net"
+	"net/netip"
 	"strings"
 	"testing"
 
@@ -407,7 +407,7 @@ func testResourceEqual(t *testing.T, i int, name string, exp, got DNSResourceRec
 
 	// we don't check .Data
 
-	if !exp.IP.Equal(got.IP) {
+	if exp.IP != got.IP {
 		t.Errorf("expected %s[%d].IP = %v, got %v", name, i, exp.IP, got.IP)
 	}
 	if !bytes.Equal(exp.NS, got.NS) {
@@ -665,7 +665,7 @@ func TestDNSEncodeResponse(t *testing.T) {
 			Type:  DNSTypeA,
 			Class: DNSClassIN,
 			TTL:   1024,
-			IP:    net.IP([]byte{1, 2, 3, 4}),
+			IP:    netip.AddrFrom4([...]byte{1, 2, 3, 4}),
 		})
 
 	dns.Answers = append(dns.Answers,
@@ -687,7 +687,7 @@ func TestDNSEncodeResponse(t *testing.T) {
 			Type:  DNSTypeAAAA,
 			Class: DNSClassIN,
 			TTL:   1024,
-			IP:    net.IP([]byte{5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4}),
+			IP:    netip.AddrFrom16([...]byte{5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4}),
 		})
 
 	dns.Answers = append(dns.Answers,
@@ -1239,13 +1239,13 @@ func TestDNSPacketWriteAnswer(t *testing.T) {
 			Name:  []byte("www.example.com"),
 			Type:  DNSTypeA,
 			Class: DNSClassIN,
-			IP:    net.IPv4(127, 0, 0, 1),
+			IP:    netip.AddrFrom4([...]byte{127, 0, 0, 1}),
 		},
 		DNSResourceRecord{
 			Name:  []byte("www.example.com"),
 			Type:  DNSTypeAAAA,
 			Class: DNSClassIN,
-			IP:    net.IP{15: 1},
+			IP:    netip.AddrFrom16([16]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
 		},
 	}}
 	buf := gopacket.NewSerializeBuffer()
